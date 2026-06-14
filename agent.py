@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
-from tools import get_weather, get_air_quality, get_uv_index
+from tools import get_weather, get_air_quality, get_uv_index, search_skincare_evidence
 
 load_dotenv()
 
@@ -25,8 +25,12 @@ def uv_tool(lat: float, lon: float) -> dict:
     """Get the current UV index for a location using latitude and longitude."""
     return get_uv_index(lat, lon)
 
+@tool
+def evidence_search_tool(query: str) -> list:
+    """Search the web for scientific evidence to answer a skincare myth, claim, or science question. Returns sources with titles, URLs, and snippets to cite."""
+    return search_skincare_evidence(query)
 
-tools = [weather_tool, air_quality_tool, uv_tool]
+tools = [weather_tool, air_quality_tool, uv_tool, evidence_search_tool]
 
 llm = ChatAnthropic(
     model="claude-sonnet-4-6",
@@ -51,7 +55,7 @@ Your skin brief should cover:
 
 Keep advice practical, warm, and under 150 words. Never claim to diagnose skin conditions.
 
-If the user asks a skincare myth or science question, answer it directly and confidently with evidence-based information. You don't need weather data for these questions. Connect back to weather context where it's genuinely relevant (e.g. "UV exposure makes this even more important today"), but don't force it."""
+If the user asks a skincare myth or science question, you MUST call the evidence_search_tool BEFORE answering — even if you already know the answer. This is required, not optional: the tool provides current sources you will cite. After calling it, answer based on what you find, and ALWAYS end your response with a "Sources:" line listing the URLs returned by the tool."""
 
 
 def run_agent(user_input: str) -> str:
@@ -65,7 +69,9 @@ def run_agent(user_input: str) -> str:
     while True:
         response = llm.invoke(messages)
         messages.append(response)
-
+        if response.tool_calls:
+            print(f"[debug] tools called: {[tc['name'] for tc in response.tool_calls]}")
+            
         # If no tool calls, we have the final answer
         if not response.tool_calls:
             return response.content
@@ -87,6 +93,6 @@ def run_agent(user_input: str) -> str:
 
 
 if __name__ == "__main__":
-    result = run_agent("I'm in London. What does my skin need today?")
+    result = run_agent("Does vitamin C cancel out when used with niacinamide?")
     print("\n--- SKIN BRIEF ---")
     print(result)

@@ -76,3 +76,29 @@ def get_uv_index(lat: float, lon: float) -> dict:
     return {
         "uv_index": data["value"],
     }
+
+from tavily import TavilyClient
+
+
+def search_skincare_evidence(query: str) -> list:
+    """Search the web for evidence on a skincare claim or science question.
+
+    Returns a list of sources, each with title, url, and a content snippet,
+    for the agent to synthesize and cite.
+    """
+    client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+    response = client.search(
+        query=query,
+        max_results=3,
+        search_depth="advanced",
+        exclude_domains=["reddit.com", "quora.com", "pinterest.com"],
+    )
+    
+    return [
+        {
+            "title": r["title"],
+            "url": r["url"],
+            "content": r["content"],
+        }
+        for r in response["results"]
+    ]
