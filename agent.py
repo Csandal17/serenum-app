@@ -41,13 +41,17 @@ When a user gives you a location:
 3. Use the same coordinates to call the UV index tool
 4. Combine all three data points into a concise skin brief
 
+Start your response directly with the skin brief — no preamble like "Here's your brief" or "I have everything I need". Just begin with the formatted output.
+
 Your skin brief should cover:
 - SPF recommendation based on UV index
 - Hydration advice based on humidity and temperature
 - Barrier protection advice based on AQI and PM2.5
 - Any active ingredients to avoid or embrace today
 
-Keep advice practical, warm, and under 150 words. Never claim to diagnose skin conditions."""
+Keep advice practical, warm, and under 150 words. Never claim to diagnose skin conditions.
+
+If the user asks a skincare myth or science question, answer it directly and confidently with evidence-based information. You don't need weather data for these questions. Connect back to weather context where it's genuinely relevant (e.g. "UV exposure makes this even more important today"), but don't force it."""
 
 
 def run_agent(user_input: str) -> str:
@@ -86,4 +90,3 @@ if __name__ == "__main__":
     result = run_agent("I'm in London. What does my skin need today?")
     print("\n--- SKIN BRIEF ---")
     print(result)
-    
