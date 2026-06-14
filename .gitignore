@@ -1,6 +1,11 @@
 venv/
 .env
 __pycache__/
-.chainlit/
+*.pyc
 .files/
-*.pyc.chainlit/translations/
+.DS_Store
+
+# Chainlit: ignore the folder's local data, but keep config and translations
+.chainlit/*
+!.chainlit/config.toml
+!.chainlit/translations/

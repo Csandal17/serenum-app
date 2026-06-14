@@ -1,0 +1,7 @@
+/* Sērēnum custom styles */
+
+/* Enlarge the logo (header + welcome screen). Tune the height to taste. */
+img[alt="logo"] {
+  height: 80px !important;
+  width: auto !important;
+}

@@ -69,8 +69,6 @@ def run_agent(user_input: str) -> str:
     while True:
         response = llm.invoke(messages)
         messages.append(response)
-        if response.tool_calls:
-            print(f"[debug] tools called: {[tc['name'] for tc in response.tool_calls]}")
             
         # If no tool calls, we have the final answer
         if not response.tool_calls:
