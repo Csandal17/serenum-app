@@ -1,5 +1,5 @@
 # Sērēnum — Chainlit app for Hugging Face Spaces (Docker SDK)
-FROM python:3.12-slim
+FROM python:3.13-slim
 
 # Create a non-root user (Hugging Face Spaces requirement)
 RUN useradd -m -u 1000 user
