@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / ".env")
 
 from mcp.server.fastmcp import FastMCP
-from tools import get_weather as fetch_weather
+from tools import get_weather as fetch_weather, search_skincare_evidence as fetch_evidence
 
 mcp = FastMCP("serenum")
 
@@ -20,6 +20,12 @@ def get_weather(city: str) -> dict:
     return fetch_weather(city)
 
 
+@mcp.tool()
+def search_skincare_evidence(query: str) -> list:
+    """Search the web for scientific evidence on a skincare claim, myth, or ingredient question. Returns sources with titles, URLs, and content snippets to cite."""
+    return fetch_evidence(query)
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")
-    
+  
