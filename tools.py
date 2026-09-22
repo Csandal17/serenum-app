@@ -102,3 +102,4 @@ def search_skincare_evidence(query: str) -> list:
         }
         for r in response["results"]
     ]
+
