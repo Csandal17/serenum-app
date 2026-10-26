@@ -1,4 +1,6 @@
 import os
+from urllib.parse import urlsplit
+
 import requests
 from dotenv import load_dotenv
 
@@ -6,6 +8,10 @@ load_dotenv()
 
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 BASE_URL = "https://api.openweathermap.org/data/2.5"
+
+# Seconds to wait for OpenWeatherMap before giving up, so a slow or stuck
+# upstream call can't hang a request forever.
+REQUEST_TIMEOUT = 10
 
 
 def get_weather(city: str) -> dict:
@@ -19,7 +25,7 @@ def get_weather(city: str) -> dict:
         "appid": API_KEY,
         "units": "metric",  # Celsius
     }
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()  # Raises an error if the API call fails
     data = response.json()
 
@@ -45,7 +51,7 @@ def get_air_quality(lat: float, lon: float) -> dict:
         "lon": lon,
         "appid": API_KEY,
     }
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     data = response.json()
 
@@ -69,7 +75,7 @@ def get_uv_index(lat: float, lon: float) -> dict:
         "lon": lon,
         "appid": API_KEY,
     }
-    response = requests.get(url, params=params)
+    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     data = response.json()
 
@@ -80,26 +86,54 @@ def get_uv_index(lat: float, lon: float) -> dict:
 from tavily import TavilyClient
 
 
-def search_skincare_evidence(query: str) -> list:
-    """Search the web for evidence on a skincare claim or science question.
+def is_trusted_url(url: str, domains) -> bool:
+    """True if the URL's host is one of `domains` or a subdomain of one.
+
+    "https://www.nhs.uk/..." matches "nhs.uk"; "https://notnhs.uk/..." and
+    "https://nhs.uk.example.com/..." do not.
+    """
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return False
+    host = (parts.hostname or "").rstrip(".").lower()
+    if parts.scheme not in ("http", "https") or not host:
+        return False
+    return any(host == d or host.endswith("." + d) for d in domains)
+
+
+def search_skincare_evidence(query: str, include_domains=None) -> list:
+    """Search for evidence on a skincare claim or science question.
 
     Returns a list of sources, each with title, url, and a content snippet,
     for the agent to synthesize and cite.
+
+    With include_domains=None (what agent.py uses), this searches the web
+    as before. With a list of domains (what the MCP server uses), Tavily is
+    asked to search only those domains, and every result is checked again
+    here, so a page from anywhere else can never be returned.
     """
     client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
-    response = client.search(
-        query=query,
-        max_results=3,
-        search_depth="advanced",
-        exclude_domains=["reddit.com", "quora.com", "pinterest.com"],
-    )
-    
+    search_args = {
+        "query": query,
+        "max_results": 3,
+        "search_depth": "advanced",
+        "exclude_domains": ["reddit.com", "quora.com", "pinterest.com"],
+    }
+    if include_domains:
+        search_args["include_domains"] = list(include_domains)
+    response = client.search(**search_args)
+
+    results = response["results"]
+    if include_domains:
+        results = [r for r in results if is_trusted_url(r["url"], include_domains)]
+
     return [
         {
             "title": r["title"],
             "url": r["url"],
             "content": r["content"],
         }
-        for r in response["results"]
+        for r in results
     ]
 
