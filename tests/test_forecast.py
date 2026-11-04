@@ -6,6 +6,7 @@ import pytest
 import requests
 
 import forecast
+import tools
 from forecast import ForecastError, get_forecast
 
 TODAY = date(2026, 11, 4)
@@ -66,6 +67,7 @@ def no_network(monkeypatch):
         raise AssertionError("A test tried to call Open-Meteo for real")
 
     monkeypatch.setattr(forecast.requests, "get", blocked)
+    monkeypatch.setattr(tools, "RETRY_WAIT", 0)  # no real waiting in tests
 
 
 def test_forecast_rows(calls):
@@ -194,3 +196,19 @@ def test_messages_have_no_em_dashes():
         with pytest.raises(ForecastError) as info:
             get_forecast("Barcelona", start, end, today=TODAY)
         assert "—" not in str(info.value)
+
+
+def test_a_rate_limited_forecast_is_retried_once(monkeypatch):
+    """The 4 Nov live check saw Open-Meteo answer 429 from shared cloud servers."""
+    answers = [FakeResponse(PLACE), FakeResponse({"reason": "Too many requests"}, 429), FakeResponse(FORECAST)]
+    calls = []
+
+    def fake_get(url, params=None, timeout=None):
+        calls.append(url)
+        return answers.pop(0)
+
+    monkeypatch.setattr(forecast.requests, "get", fake_get)
+    result = get_forecast("Barcelona", "2026-11-09", "2026-11-10", today=TODAY)
+
+    assert calls == [forecast.GEOCODING_URL, forecast.FORECAST_URL, forecast.FORECAST_URL]
+    assert len(result["days"]) == 2

@@ -10,13 +10,13 @@ Each forecast makes two calls: one to find the city, one for the forecast.
 
 from datetime import date, datetime, timedelta, timezone
 
-import requests
+import requests  # noqa: F401  (tests patch requests.get through this module)
+
+# Calls go through tools.get_with_retry: the standard timeout, retried once.
+from tools import REQUEST_TIMEOUT, get_with_retry  # noqa: F401
 
 GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
-
-# Seconds to wait for Open-Meteo before giving up.
-REQUEST_TIMEOUT = 10
 
 # Open-Meteo forecasts up to 16 days ahead. Sērēnum stops at today plus 14,
 # which leaves room for the destination's date being a day ahead of or
@@ -105,7 +105,7 @@ def find_place(city: str) -> dict:
         code = parts[-1].upper()
         params["countryCode"] = COUNTRY_CODE_FIXES.get(code, code)
 
-    response = requests.get(GEOCODING_URL, params=params, timeout=REQUEST_TIMEOUT)
+    response = get_with_retry(GEOCODING_URL, params)
     response.raise_for_status()
     results = response.json().get("results") or []
     if not results:
@@ -201,9 +201,9 @@ def get_forecast(city: str, start_date: str, end_date: str, today: date | None =
         notes.append(f"The forecast only reaches {last.isoformat()}, so later days are not included.")
 
     place = find_place(city)
-    response = requests.get(
+    response = get_with_retry(
         FORECAST_URL,
-        params={
+        {
             "latitude": place["lat"],
             "longitude": place["lon"],
             "daily": ",".join(DAILY_VARIABLES),
@@ -213,7 +213,6 @@ def get_forecast(city: str, start_date: str, end_date: str, today: date | None =
             "start_date": start.isoformat(),
             "end_date": end.isoformat(),
         },
-        timeout=REQUEST_TIMEOUT,
     )
     response.raise_for_status()
     data = response.json()

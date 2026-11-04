@@ -1,4 +1,5 @@
 import os
+import time
 from urllib.parse import urlsplit
 
 import requests
@@ -13,6 +14,28 @@ BASE_URL = "https://api.openweathermap.org/data/2.5"
 # upstream call can't hang a request forever.
 REQUEST_TIMEOUT = 10
 
+# Servers in the cloud share their outgoing addresses, so Open-Meteo (and
+# occasionally OpenWeatherMap) can answer slowly or with "too many requests"
+# even when Sērēnum itself has made few calls. One retry after a short wait
+# usually gets through; a second failure is reported as a plain error.
+RETRY_STATUSES = {429, 500, 502, 503, 504}
+RETRY_WAIT = 1.5  # seconds
+
+
+def get_with_retry(url: str, params: dict):
+    """requests.get with the standard timeout, retried once after a timeout,
+    a dropped connection, or a 429 or 5xx response."""
+    for attempt in (1, 2):
+        try:
+            response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+        except (requests.Timeout, requests.ConnectionError):
+            if attempt == 2:
+                raise
+        else:
+            if response.status_code not in RETRY_STATUSES or attempt == 2:
+                return response
+        time.sleep(RETRY_WAIT)
+
 
 def get_weather(city: str) -> dict:
     """Fetch current weather for a city.
@@ -25,7 +48,7 @@ def get_weather(city: str) -> dict:
         "appid": API_KEY,
         "units": "metric",  # Celsius
     }
-    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    response = get_with_retry(url, params)
     response.raise_for_status()  # Raises an error if the API call fails
     data = response.json()
 
@@ -51,7 +74,7 @@ def get_air_quality(lat: float, lon: float) -> dict:
         "lon": lon,
         "appid": API_KEY,
     }
-    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    response = get_with_retry(url, params)
     response.raise_for_status()
     data = response.json()
 
@@ -84,7 +107,7 @@ def get_uv_index(lat: float, lon: float) -> dict:
         "timezone": "auto",
         "forecast_days": 1,
     }
-    response = requests.get(OPEN_METEO_URL, params=params, timeout=REQUEST_TIMEOUT)
+    response = get_with_retry(OPEN_METEO_URL, params)
     response.raise_for_status()
     data = response.json()
 

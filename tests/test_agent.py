@@ -60,6 +60,7 @@ def no_network(monkeypatch):
 
     monkeypatch.setattr(tools.requests, "get", blocked)
     monkeypatch.setattr(tools, "TavilyClient", BlockedTavily)
+    monkeypatch.setattr(tools, "RETRY_WAIT", 0)  # no real waiting in tests
     import forecast
 
     monkeypatch.setattr(forecast.requests, "get", blocked)
