@@ -126,6 +126,13 @@ def test_country_code_narrows_the_search(calls):
     assert calls[0]["params"]["countryCode"] == "FR"
 
 
+def test_uk_is_sent_as_gb(calls):
+    """Open-Meteo uses ISO codes, so "London, UK" must search with GB."""
+    get_forecast("London, UK", "2026-11-09", "2026-11-09", today=TODAY)
+    assert calls[0]["params"]["name"] == "London"
+    assert calls[0]["params"]["countryCode"] == "GB"
+
+
 def test_unknown_city(monkeypatch):
     monkeypatch.setattr(forecast.requests, "get", lambda *a, **k: FakeResponse({}))
     with pytest.raises(ForecastError, match="Couldn't find a place called 'Atlantis'"):
@@ -160,11 +167,20 @@ def test_range_past_the_horizon_is_shortened_with_a_note(calls):
     assert "only reaches 2026-11-18" in result["note"]
 
 
-def test_range_starting_in_the_past_starts_today(calls):
+def test_range_starting_in_the_past_is_shortened(calls):
     result = get_forecast("Barcelona", "2026-11-01", "2026-11-06", today=TODAY)
 
-    assert calls[1]["params"]["start_date"] == "2026-11-04"
-    assert "Days before today are not included" in result["note"]
+    # The day before UTC's today is kept, for destinations behind UTC.
+    assert calls[1]["params"]["start_date"] == "2026-11-03"
+    assert "Days in the past are not included" in result["note"]
+
+
+def test_destination_behind_utc_can_ask_for_its_own_today(calls):
+    """At 01:00 UTC on 4 Nov it is still 3 Nov in Los Angeles. Found by the 4 Nov review."""
+    result = get_forecast("Los Angeles", "2026-11-03", "2026-11-03", today=TODAY)
+
+    assert calls[1]["params"]["start_date"] == "2026-11-03"
+    assert "note" not in result
 
 
 def test_upstream_failure_raises_for_the_agent_to_handle(monkeypatch):

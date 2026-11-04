@@ -68,6 +68,10 @@ WEATHER_CODES = {
 }
 
 
+# Everyday country codes that aren't the ISO codes Open-Meteo expects.
+COUNTRY_CODE_FIXES = {"UK": "GB", "EL": "GR"}
+
+
 class ForecastError(Exception):
     """A problem with the request that can be explained to the user as it is."""
 
@@ -89,7 +93,8 @@ def find_place(city: str) -> dict:
     """Look up a city's name, country and coordinates.
 
     Accepts "Barcelona" or "Barcelona, ES" (a two-letter country code
-    after a comma narrows the search).
+    after a comma narrows the search). "UK" is read as GB, the ISO code
+    Open-Meteo uses for the United Kingdom.
     """
     parts = [part.strip() for part in str(city).split(",") if part.strip()]
     if not parts:
@@ -97,7 +102,8 @@ def find_place(city: str) -> dict:
 
     params = {"name": parts[0], "count": 1, "language": "en", "format": "json"}
     if len(parts) > 1 and len(parts[-1]) == 2 and parts[-1].isalpha():
-        params["countryCode"] = parts[-1].upper()
+        code = parts[-1].upper()
+        params["countryCode"] = COUNTRY_CODE_FIXES.get(code, code)
 
     response = requests.get(GEOCODING_URL, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
@@ -164,15 +170,21 @@ def get_forecast(city: str, start_date: str, end_date: str, today: date | None =
     Covers today and the next FORECAST_HORIZON_DAYS days. A range that runs
     past that is shortened, with a note saying so. Raises ForecastError with
     a plain message for anything the user can fix (dates, unknown city).
+
+    "Today" is the UTC date, but a destination behind UTC (the Americas, in
+    the evening UK time) is still on the day before. So the day before UTC's
+    today is accepted too; otherwise a trip starting "today" there would be
+    refused as in the past.
     """
     today = today or today_utc()
+    earliest = today - timedelta(days=1)
     start = _parse_date(start_date, "start date")
     end = _parse_date(end_date, "end date")
     if end < start:
         raise ForecastError("The end date is before the start date.")
 
     last = today + timedelta(days=FORECAST_HORIZON_DAYS)
-    if end < today:
+    if end < earliest:
         raise ForecastError("Those dates are in the past. Sērēnum only has forecasts for today onwards.")
     if start > last:
         raise ForecastError(
@@ -181,9 +193,9 @@ def get_forecast(city: str, start_date: str, end_date: str, today: date | None =
         )
 
     notes = []
-    if start < today:
-        start = today
-        notes.append("Days before today are not included.")
+    if start < earliest:
+        start = earliest
+        notes.append("Days in the past are not included.")
     if end > last:
         end = last
         notes.append(f"The forecast only reaches {last.isoformat()}, so later days are not included.")

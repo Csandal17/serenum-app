@@ -31,9 +31,16 @@ EN = "–"
         ("Horizontal bar ― too", "Horizontal bar, too"),
         # Spaced en dash used as an em dash
         (f"Dry today {EN} see the sources", "Dry today, see the sources"),
-        # En dashes that are ranges stay
+        # En dashes that are ranges stay (found by the 4 Nov review)
         (f"10{EN}20% concentration", f"10{EN}20% concentration"),
         (f"UV 3 {EN} 5 is Moderate", f"UV 3 {EN} 5 is Moderate"),
+        (f"Highs of 12\u00b0C {EN} 15\u00b0C", f"Highs of 12\u00b0C {EN} 15\u00b0C"),
+        (f"Monday {EN} Friday", f"Monday {EN} Friday"),
+        (f"November {EN} March", f"November {EN} March"),
+        # Links are never changed
+        (f"https://example.com/a{EM}b", f"https://example.com/a{EM}b"),
+        (f"[NHS](https://www.nhs.uk/a{EM}b) {EM} see", f"[NHS](https://www.nhs.uk/a{EM}b), see"),
+        (f"See https://www.nhs.uk/x {EM} and more", "See https://www.nhs.uk/x, and more"),
         # Nothing to change
         ("No dashes here, and a hyphen-word.", "No dashes here, and a hyphen-word."),
         ("", ""),
