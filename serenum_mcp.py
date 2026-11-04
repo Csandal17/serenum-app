@@ -168,7 +168,7 @@ def build_server(transport: str = "stdio", *, search_cap=_FROM_ENV, weather_cap=
 
     @server.tool()
     async def get_uv_index(lat: float, lon: float) -> dict:
-        """Get the current UV index for a location from its coordinates. Scale: 0 to 2 Low, 3 to 5 Moderate, 6 to 7 High, 8 to 10 Very High, 11+ Extreme. Call get_weather first to get lat and lon for a city."""
+        """Get the current UV index and today's maximum for a location from its coordinates. Scale: 0 to 2 Low, 3 to 5 Moderate, 6 to 7 High, 8 to 10 Very High, 11+ Extreme. Call get_weather first to get lat and lon for a city."""
         if limited := over_limit(weather_cap):
             return limited
         return await _call_upstream(tools.get_uv_index, lat, lon, service="UV")

@@ -37,7 +37,7 @@ def fake_owm(monkeypatch):
             return FakeResponse(WEATHER_PAYLOAD)
         if url.endswith("/air_pollution"):
             return FakeResponse(AIR_PAYLOAD)
-        if url.endswith("/uvi"):
+        if url == tools.OPEN_METEO_URL:
             return FakeResponse(UV_PAYLOAD)
         raise AssertionError(f"Unexpected URL {url}")
 

@@ -23,7 +23,7 @@ Air pollution for a location, from OpenWeatherMap: AQI (1 = Good, 5 = Very Poor)
 
 ### `get_uv_index(lat: float, lon: float)`
 
-Current UV index for a location, from OpenWeatherMap.
+Current UV index and today's maximum for a location, from [Open-Meteo](https://open-meteo.com/) (OpenWeatherMap retired its UV API in 2021). Open-Meteo needs no key, is free for non-commercial use up to 10,000 calls a day, and its data is licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), which requires attribution.
 
 > Same as above: call `get_weather` first to get `lat`/`lon`.
 
@@ -126,7 +126,7 @@ Once it's deployed at a public address (DEPLOY.md walks through Railway):
 
 ### No sign-in, so daily limits instead
 
-The remote server has no login: anyone with the URL can use it. That's what lets people add it to Claude in a few clicks, but it means every request spends Sērēnum's own Tavily and OpenWeatherMap credit. Daily limits cap that spend:
+The remote server has no login: anyone with the URL can use it. That's what lets people add it to Claude in a few clicks, but it means every request spends Sērēnum's own Tavily and OpenWeatherMap credit, and counts towards Open-Meteo's free daily allowance. Daily limits cap that spend:
 
 | Variable | Default | Covers |
 | --- | --- | --- |
@@ -155,4 +155,4 @@ pip install -r requirements-dev.txt -c requirements.txt
 pytest
 ```
 
-The tests need no API keys and make no real calls to OpenWeatherMap or Tavily. They cover both transports, the Host header fix for public hosting, the trusted-domain filter, the daily limits and the plain error messages.
+The tests need no API keys and make no real calls to OpenWeatherMap, Open-Meteo or Tavily. They cover both transports, the Host header fix for public hosting, the trusted-domain filter, the daily limits and the plain error messages.

@@ -106,6 +106,14 @@ curl -s $URL/mcp -H "Content-Type: application/json" -H "Accept: application/jso
 
 If it says the weather service rejected the key, the OpenWeatherMap key may not be active yet (see step 0). Wait and try again.
 
+**Does UV work?** UV comes from Open-Meteo, which needs no key. This should print London's current UV index and today's maximum:
+
+```bash
+curl -s $URL/mcp -H "Content-Type: application/json" -H "Accept: application/json, text/event-stream" -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_uv_index","arguments":{"lat":51.51,"lon":-0.13}}}'
+```
+
+If `uv_index` comes back as `null` with a note, Open-Meteo didn't return a current value, and only today's maximum is shown.
+
 ## 8. Add it to Claude
 
 1. In Claude, go to **Customize > Connectors**, click **+ Add**, then **Add custom connector**.

@@ -41,7 +41,11 @@ async def test_weather_tools_return_conditions(fake_owm):
         "lon": -0.13,
     }
     assert await call(server, "get_air_quality", {"lat": 51.51, "lon": -0.13}) == {"aqi": 2, "pm2_5": 6.4, "no2": 18.2}
-    assert await call(server, "get_uv_index", {"lat": 51.51, "lon": -0.13}) == {"uv_index": 1.2}
+    assert await call(server, "get_uv_index", {"lat": 51.51, "lon": -0.13}) == {
+        "uv_index": 1.2,
+        "uv_index_max_today": 2.1,
+        "data_source": "Open-Meteo.com (CC BY 4.0)",
+    }
 
 
 # Trusted sources ---------------------------------------------------------

@@ -64,24 +64,40 @@ def get_air_quality(lat: float, lon: float) -> dict:
         "no2": components["no2"],
     }
 
+OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+
+
 def get_uv_index(lat: float, lon: float) -> dict:
-    """Fetch current UV index for a location.
-    
+    """Fetch the current UV index, and today's maximum, for a location.
+
     UV scale: 0-2 Low, 3-5 Moderate, 6-7 High, 8-10 Very High, 11+ Extreme
+
+    OpenWeatherMap retired its standalone UV API in April 2021, so UV comes
+    from Open-Meteo instead: no API key, free for non-commercial use (up to
+    10,000 calls a day), data licensed under CC BY 4.0 with attribution.
     """
-    url = "https://api.openweathermap.org/data/2.5/uvi"
     params = {
-        "lat": lat,
-        "lon": lon,
-        "appid": API_KEY,
+        "latitude": lat,
+        "longitude": lon,
+        "current": "uv_index",
+        "daily": "uv_index_max",
+        "timezone": "auto",
+        "forecast_days": 1,
     }
-    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    response = requests.get(OPEN_METEO_URL, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     data = response.json()
 
-    return {
-        "uv_index": data["value"],
+    current = (data.get("current") or {}).get("uv_index")
+    daily_max = ((data.get("daily") or {}).get("uv_index_max") or [None])[0]
+    result = {
+        "uv_index": None if current is None else round(current, 1),
+        "uv_index_max_today": None if daily_max is None else round(daily_max, 1),
+        "data_source": "Open-Meteo.com (CC BY 4.0)",
     }
+    if current is None:
+        result["note"] = "The current UV index wasn't available, so only today's maximum is shown."
+    return result
 
 from tavily import TavilyClient
 

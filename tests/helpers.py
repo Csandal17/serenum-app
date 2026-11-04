@@ -28,7 +28,7 @@ WEATHER_PAYLOAD = {
     "coord": {"lat": 51.51, "lon": -0.13},
 }
 AIR_PAYLOAD = {"list": [{"main": {"aqi": 2}, "components": {"pm2_5": 6.4, "no2": 18.2}}]}
-UV_PAYLOAD = {"value": 1.2}
+UV_PAYLOAD = {"current": {"time": "2026-11-04T17:00", "interval": 900, "uv_index": 1.23}, "daily": {"time": ["2026-11-04"], "uv_index_max": [2.06]}}
 
 
 class FakeTavily:
