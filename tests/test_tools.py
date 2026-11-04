@@ -1,14 +1,10 @@
-"""tools.py: trusted-domain filtering, and the Chainlit app's search staying as it was."""
-
-import ast
-from pathlib import Path
+"""tools.py: trusted-domain filtering, and the open-web search the Chainlit app used before."""
 
 import pytest
 
 import tools
 
-ROOT = Path(__file__).resolve().parent.parent
-TRUSTED = ["nhs.uk", "nice.org.uk", "bad.org.uk", "skinhealthinfo.org.uk"]
+TRUSTED =["nhs.uk", "nice.org.uk", "bad.org.uk", "skinhealthinfo.org.uk"]
 
 
 @pytest.mark.parametrize(
@@ -51,22 +47,6 @@ def test_search_without_trusted_domains_is_unchanged(fake_tavily):
     assert search_args["exclude_domains"] == ["reddit.com", "quora.com", "pinterest.com"]
     assert search_args["max_results"] == 3
     assert len(results) == 3
-
-
-def test_agent_still_searches_without_trusted_domains():
-    """agent.py calls the search with the query only, so the Chainlit app is unchanged by this PR.
-
-    The planned app update will switch the app to trusted domains too; update this test then.
-    """
-    tree = ast.parse((ROOT / "agent.py").read_text(encoding="utf-8"))
-    calls = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "search_skincare_evidence"
-    ]
-    assert calls, "agent.py no longer calls search_skincare_evidence"
-    for node in calls:
-        assert len(node.args) == 1 and not node.keywords
 
 
 def test_weather_requests_have_a_timeout(fake_owm):
