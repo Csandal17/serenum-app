@@ -18,14 +18,16 @@ summariser = ChatAnthropic(
     max_tokens=200,
 )
 
-SUMMARY_PROMPT = """You turn a written skincare brief into a short spoken version \
+SUMMARY_PROMPT = """You turn a written Sērēnum answer into a short spoken version \
 to be read aloud by a voice assistant.
 
 Rules:
 - 2 to 3 natural sentences, warm and calm.
 - Plain spoken English only. No markdown, no tables, no bullet points, no emoji.
+- Never use em dashes. Use commas or full stops instead.
 - Do NOT read out URLs or a "Sources" list.
-- Lead with the location and the single most important action for today.
+- For conditions, lead with the location and the most notable condition, such as a high UV index.
+- For a sources answer, say what the sources say. Add nothing that isn't in the written answer, and no personal advice.
 - Keep it under 60 words."""
 
 
@@ -45,7 +47,7 @@ def synthesize(text: str) -> bytes:
         voice_id=VOICE_ID,
         model_id=MODEL_ID,
     )
-    # convert() returns a generator of byte chunks — join into one blob
+    # convert() returns a generator of byte chunks, so join them into one blob
     return b"".join(audio)
 
 

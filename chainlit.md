@@ -1,14 +1,20 @@
-# Welcome to Chainlit! 🚀🤖
+# About Sērēnum
 
-Hi there, Developer! 👋 We're excited to have you on board. Chainlit is a powerful tool designed to help you prototype, debug and share applications built on top of LLMs.
+Sērēnum reports the weather, UV and air quality for a place, and what trusted UK health sources say about skin in those conditions.
 
-## Useful Links 🔗
+## What you can ask
 
-- **Documentation:** Get started with our comprehensive [Chainlit Documentation](https://docs.chainlit.io) 📚
-- **Discord Community:** Join our friendly [Chainlit Discord](https://discord.gg/k73SQ3FyUh) to ask questions, share your projects, and connect with other developers! 💬
+- **Today's conditions:** give a city for its temperature, humidity, wind, UV index and air quality, with what the sources say about the most notable one.
+- **A trip:** give a city and dates, up to 14 days ahead, for the forecast.
+- **A skincare claim:** ask whether something is true, and Sērēnum shows what trusted sources say about it.
+- **Listen:** tap to hear a short spoken version of any answer.
 
-We can't wait to see what you create with Chainlit! Happy coding! 💻😊
+## Where the information comes from
 
-## Welcome screen
+- **Today's weather and air quality:** OpenWeatherMap.
+- **UV and trip forecasts:** [Open-Meteo.com](https://open-meteo.com/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- **Evidence:** only the NHS, NICE and the British Association of Dermatologists. Every source is linked. If none of them cover a question, Sērēnum says so rather than answering from elsewhere.
 
-To modify the welcome screen, edit the `chainlit.md` file at the root of your project. If you do not want a welcome screen, just leave this file empty.
+## What Sērēnum doesn't do
+
+Sērēnum doesn't give personal advice, diagnose skin conditions, or recommend products. For a specific skin condition, symptom or reaction, speak to a GP or pharmacist.
