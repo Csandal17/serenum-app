@@ -1,0 +1,8 @@
+# What the MCP server needs (serenum_mcp.py, tools.py, limits.py), and nothing else.
+# Versions match requirements.txt. Dockerfile.mcp also installs with
+# requirements.txt as a constraints file, so every sub-dependency
+# (starlette, uvicorn, pydantic and so on) matches the main app's too.
+mcp==1.27.2
+python-dotenv==1.2.2
+requests==2.34.2
+tavily-python==0.7.26

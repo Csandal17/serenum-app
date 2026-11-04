@@ -1,0 +1,24 @@
+# Sērēnum MCP server, run as a public Streamable HTTP server (for Railway).
+# The Hugging Face Chainlit app keeps using ./Dockerfile; this file is separate.
+# DEPLOY.md explains how to point Railway at it.
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    MCP_TRANSPORT=http \
+    PORT=8000
+
+RUN useradd --create-home --uid 1000 serenum
+WORKDIR /app
+
+# requirements.txt is only used as a constraints file here, so every
+# sub-dependency gets the same version the main app uses.
+COPY requirements-mcp.txt requirements.txt ./
+RUN pip install --no-cache-dir -r requirements-mcp.txt -c requirements.txt
+
+# Copy the server's own files by name, so a local .env can never end up in the image.
+COPY serenum_mcp.py tools.py limits.py ./
+
+USER serenum
+EXPOSE 8000
+CMD ["python", "serenum_mcp.py"]
