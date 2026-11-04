@@ -72,3 +72,63 @@ def test_open_meteo_error_raises_for_the_caller_to_handle(respond):
 
     with pytest.raises(requests.HTTPError):
         tools.get_uv_index(200, 0)
+
+
+# One retry for upstream hiccups (found in the 4 Nov live check: Open-Meteo
+# timed out or answered 429 from shared cloud servers) ---------------------
+
+
+@pytest.fixture
+def sequence(monkeypatch):
+    """Make requests.get play back a list of outcomes: a payload, a status code, or an exception."""
+    monkeypatch.setattr(tools, "RETRY_WAIT", 0)
+    calls = []
+
+    def play(*outcomes):
+        queue = list(outcomes)
+
+        def fake_get(url, params=None, timeout=None):
+            calls.append({"url": url, "timeout": timeout})
+            outcome = queue.pop(0)
+            if isinstance(outcome, Exception):
+                raise outcome
+            if isinstance(outcome, int):
+                return FakeResponse({"reason": "Too many requests"}, outcome)
+            return FakeResponse(outcome)
+
+        monkeypatch.setattr(tools.requests, "get", fake_get)
+        return calls
+
+    return play
+
+
+GOOD = {"current": {"uv_index": 1.0}, "daily": {"uv_index_max": [2.0]}}
+
+
+@pytest.mark.parametrize("first_failure", [429, 503, requests.Timeout("slow"), requests.ConnectionError("reset")])
+def test_one_retry_recovers(sequence, first_failure):
+    calls = sequence(first_failure, GOOD)
+    assert tools.get_uv_index(51.51, -0.13)["uv_index"] == 1.0
+    assert len(calls) == 2
+    assert all(c["timeout"] == tools.REQUEST_TIMEOUT for c in calls)
+
+
+def test_second_failure_is_reported(sequence):
+    calls = sequence(429, 429)
+    with pytest.raises(requests.HTTPError):
+        tools.get_uv_index(51.51, -0.13)
+    assert len(calls) == 2
+
+
+def test_second_timeout_is_reported(sequence):
+    sequence(requests.Timeout("slow"), requests.Timeout("slow"))
+    with pytest.raises(requests.Timeout):
+        tools.get_uv_index(51.51, -0.13)
+
+
+def test_errors_that_wont_change_are_not_retried(sequence):
+    """A 404 (unknown city) or 401 (bad key) won't fix itself, so there's no second call."""
+    calls = sequence(404)
+    with pytest.raises(requests.HTTPError):
+        tools.get_uv_index(51.51, -0.13)
+    assert len(calls) == 1
