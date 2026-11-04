@@ -25,6 +25,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / ".env")
 
 from mcp.server.fastmcp import FastMCP  # noqa: E402
+from mcp.types import ToolAnnotations  # noqa: E402
 from starlette.requests import Request  # noqa: E402
 from starlette.responses import PlainTextResponse  # noqa: E402
 from tavily.errors import InvalidAPIKeyError, UsageLimitExceededError  # noqa: E402
@@ -65,6 +66,13 @@ that a GP or pharmacist is the right person to ask.
 # (tavily-python 0.7.26 also has a keyless mode that it falls back to
 # silently when no key is set; this check stops that happening here.)
 REQUIRED_KEYS_FOR_HTTP = ("OPENWEATHER_API_KEY", "TAVILY_API_KEY")
+
+def read_only(title: str) -> ToolAnnotations:
+    """Every Sērēnum tool only reads (weather, UV, air quality, search) and
+    reaches outside services. Anthropic's Connectors Directory requires each
+    tool to say whether it is read-only or destructive."""
+    return ToolAnnotations(title=title, readOnlyHint=True, destructiveHint=False, openWorldHint=True)
+
 
 DEFAULT_SEARCH_DAILY_LIMIT = 20
 DEFAULT_WEATHER_DAILY_LIMIT = 500
@@ -147,7 +155,7 @@ def build_server(transport: str = "stdio", *, search_cap=_FROM_ENV, weather_cap=
             return {"error": cap.limit_message()}
         return None
 
-    @server.tool()
+    @server.tool(annotations=read_only("Current weather"))
     async def get_weather(city: str) -> dict:
         """Get current weather for a city: temperature (°C), humidity (%), wind speed (m/s), conditions, and the city's coordinates (lat, lon). Add a country code if a city name is ambiguous, for example "Paris, FR"."""
         if limited := over_limit(weather_cap):
@@ -159,21 +167,21 @@ def build_server(transport: str = "stdio", *, search_cap=_FROM_ENV, weather_cap=
             not_found=f"Couldn't find a city called {city!r}. Check the spelling, or add a country code, for example \"Paris, FR\".",
         )
 
-    @server.tool()
+    @server.tool(annotations=read_only("Air quality"))
     async def get_air_quality(lat: float, lon: float) -> dict:
         """Get air quality for a location from its coordinates: AQI on a 1 to 5 scale (1 Good, 2 Fair, 3 Moderate, 4 Poor, 5 Very Poor), plus PM2.5 and NO2 in µg/m³. Call get_weather first to get lat and lon for a city."""
         if limited := over_limit(weather_cap):
             return limited
         return await _call_upstream(tools.get_air_quality, lat, lon, service="air quality")
 
-    @server.tool()
+    @server.tool(annotations=read_only("UV index"))
     async def get_uv_index(lat: float, lon: float) -> dict:
         """Get the current UV index and today's maximum for a location from its coordinates. Scale: 0 to 2 Low, 3 to 5 Moderate, 6 to 7 High, 8 to 10 Very High, 11+ Extreme. Call get_weather first to get lat and lon for a city."""
         if limited := over_limit(weather_cap):
             return limited
         return await _call_upstream(tools.get_uv_index, lat, lon, service="UV")
 
-    @server.tool()
+    @server.tool(annotations=read_only("Search trusted UK skin sources"))
     async def search_skincare_evidence(query: str) -> dict:
         """Search trusted UK health sources (the NHS, NICE and the British Association of Dermatologists) for what they say about a skincare claim, myth, ingredient or sun-safety question. Returns up to 3 sources, each with a title, URL and snippet. Only these sites are searched. If "sources" is empty, none of them covered the question: say so instead of answering from elsewhere."""
         if limited := over_limit(search_cap):

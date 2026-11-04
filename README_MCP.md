@@ -2,6 +2,18 @@
 
 Exposes Sērēnum's weather and skincare-evidence tools as an [MCP](https://modelcontextprotocol.io) server, so Claude (or any MCP client) can call them directly.
 
+## Try Sērēnum in Claude
+
+Server URL: `https://REPLACE-WITH-RAILWAY-ADDRESS/mcp`
+
+1. In Claude, go to **Customize > Connectors**, click **+ Add**, then **Add custom connector**.
+2. Name it `Sērēnum`, paste the URL above, choose **No sign in** under **Authentication**, and click **Add**.
+3. In a chat, click **+**, then **Connectors**, and switch Sērēnum on. Then ask something like: "What's the UV index in London right now, and what does the NHS say about sunscreen?"
+
+Sērēnum reports conditions and what trusted UK sources say. It doesn't give personal advice, diagnose, or recommend products.
+
+---
+
 It runs in two ways:
 
 - **Locally over stdio** (the default). Claude Desktop starts the server on your own computer, set up exactly as before. No daily limits apply.

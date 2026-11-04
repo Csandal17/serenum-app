@@ -167,3 +167,12 @@ async def test_tavily_usage_limit_has_its_own_message(fake_tavily):
     result = await call(build_server("http"), "search_skincare_evidence", {"query": "spf"})
 
     assert "used up Sērēnum's search allowance" in result["error"]
+
+
+async def test_every_tool_is_annotated_read_only():
+    """Anthropic's Connectors Directory requires readOnlyHint or destructiveHint on every tool."""
+    for tool in await build_server("http").list_tools():
+        assert tool.annotations is not None, tool.name
+        assert tool.annotations.readOnlyHint is True, tool.name
+        assert tool.annotations.destructiveHint is False, tool.name
+        assert tool.annotations.title, tool.name
