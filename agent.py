@@ -33,7 +33,7 @@ def air_quality_tool(lat: float, lon: float) -> dict:
 
 @tool
 def uv_tool(lat: float, lon: float) -> dict:
-    """Get the current UV index from a location's coordinates. Scale: 0 to 2 Low, 3 to 5 Moderate, 6 to 7 High, 8 to 10 Very High, 11+ Extreme. Call weather_tool first to get lat and lon."""
+    """Get the current UV index and today's maximum from a location's coordinates. Scale: 0 to 2 Low, 3 to 5 Moderate, 6 to 7 High, 8 to 10 Very High, 11+ Extreme. Call weather_tool first to get lat and lon."""
     return get_uv_index(lat, lon)
 
 
@@ -87,7 +87,7 @@ Rules that always apply:
 
 Today's conditions (a place, no dates):
 1. Call weather_tool, then air_quality_tool and uv_tool with its lat and lon.
-2. If uv_tool returns an error, call forecast_tool for today's date and report its uv_index_max as today's maximum UV.
+2. If uv_tool returns an error, call forecast_tool for today's date and report its uv_index_max as today's maximum UV. If uv_index is null, report uv_index_max_today as today's maximum instead.
 3. Report temperature, humidity, wind, UV index and air quality as a short list, with what each scale means (for example, UV 6 to 7 is High).
 4. Call evidence_search_tool once about the most notable condition (for example sun protection when UV is 3 or more, or cold, dry weather) and summarise what the sources say, cited.
 

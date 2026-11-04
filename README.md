@@ -69,7 +69,7 @@ Sērēnum combines all three into one picture rather than three disconnected fac
           │
           ├─ weather_tool ─────────►  OpenWeatherMap  (temp, humidity, conditions)
           ├─ air_quality_tool ─────►  OpenWeatherMap  (AQI, PM2.5)
-          ├─ uv_tool ──────────────►  OpenWeatherMap  (UV index)
+          ├─ uv_tool ──────────────►  Open-Meteo      (UV index, today's max)
           ├─ forecast_tool ────────►  Open-Meteo      (daily forecast for trips)
           └─ evidence_search_tool ─►  Tavily          (NHS, NICE and BAD only)
           │
@@ -88,7 +88,7 @@ The agent uses a tool-calling loop: Claude decides which tools to call, runs the
 - **Agent framework:** LangChain (tool-calling loop with `.bind_tools()`)
 - **Reasoning:** Anthropic API (Claude)
 - **UI:** Chainlit (custom theme, branding, and `Listen` action)
-- **Weather data:** OpenWeatherMap (current weather, UV, air quality) and Open-Meteo (trip forecasts)
+- **Weather data:** OpenWeatherMap (current weather, air quality) and Open-Meteo (UV and trip forecasts; OpenWeatherMap retired its UV API in 2021)
 - **Evidence search:** Tavily, limited to trusted UK sources
 - **Voice:** ElevenLabs (text-to-speech)
 - **Deployment:** Hugging Face Spaces (Docker)
@@ -119,7 +119,7 @@ Then run:
 chainlit run app.py
 ```
 
-Trip forecasts come from Open-Meteo, which needs no key. On Hugging Face, these are set as Space secrets rather than a `.env` file.
+UV and trip forecasts come from Open-Meteo, which needs no key. On Hugging Face, these are set as Space secrets rather than a `.env` file.
 
 ### Tests
 
@@ -142,7 +142,7 @@ Sērēnum offers **general, educational information only**. It is not a medical 
 
 - Voice powered by [ElevenLabs](https://elevenlabs.io).
 - Weather and air quality data from [OpenWeatherMap](https://openweathermap.org).
-- Trip forecasts from [Open-Meteo.com](https://open-meteo.com/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- UV and trip forecasts from [Open-Meteo.com](https://open-meteo.com/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - Evidence search by [Tavily](https://tavily.com).
 
 Built as a personal project exploring agentic AI for everyday wellness.

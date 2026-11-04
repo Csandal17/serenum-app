@@ -11,8 +11,8 @@ Sērēnum reports the weather, UV and air quality for a place, and what trusted 
 
 ## Where the information comes from
 
-- **Today's conditions:** OpenWeatherMap.
-- **Trip forecasts:** [Open-Meteo.com](https://open-meteo.com/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- **Today's weather and air quality:** OpenWeatherMap.
+- **UV and trip forecasts:** [Open-Meteo.com](https://open-meteo.com/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - **Evidence:** only the NHS, NICE and the British Association of Dermatologists. Every source is linked. If none of them cover a question, Sērēnum says so rather than answering from elsewhere.
 
 ## What Sērēnum doesn't do
