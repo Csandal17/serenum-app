@@ -107,13 +107,27 @@ def is_trusted_url(url: str, domains) -> bool:
 
     "https://www.nhs.uk/..." matches "nhs.uk"; "https://notnhs.uk/..." and
     "https://nhs.uk.example.com/..." do not.
+
+    Anything a browser might read differently from Python is refused rather
+    than guessed at. For example, "https://evil.com\\@www.nhs.uk" looks like
+    nhs.uk to Python but takes a browser to evil.com, so URLs with
+    backslashes, a user name or password, whitespace or control characters,
+    percent-encoding in the host, a bad port or a non-ASCII host never count
+    as trusted.
     """
+    if not isinstance(url, str) or "\\" in url or any(c.isspace() or ord(c) < 32 for c in url):
+        return False
     try:
         parts = urlsplit(url)
+        parts.port  # raises ValueError for a malformed port
     except ValueError:
         return False
+    if parts.scheme not in ("http", "https"):
+        return False
+    if parts.username is not None or parts.password is not None or "%" in parts.netloc:
+        return False
     host = (parts.hostname or "").rstrip(".").lower()
-    if parts.scheme not in ("http", "https") or not host:
+    if not host or not host.isascii():
         return False
     return any(host == d or host.endswith("." + d) for d in domains)
 
